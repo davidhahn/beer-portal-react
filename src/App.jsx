@@ -24,16 +24,21 @@ const App = () => {
 
         const beers = await beerPortalContract.getAllBeers();
 
-        let beersCleaned = [];
-        beers.forEach(beer => {
-          beersCleaned.push({
+        console.log(beers);
+
+        const serializedBeer = beers.reduce((serialized, beer) => {
+          serialized.push({
             address: beer.bartender,
             message: beer.message,
             timestamp: new Date(beer.timestamp * 1000),
           });
-        });
 
-        setAllBeers(beersCleaned);
+          return serialized;
+        }, []);
+
+        console.log('serialized beer', serializedBeer);
+
+        setAllBeers(serializedBeer);
       } else {
         console.log('Ethereum object doesn\'t exist!');
       }
