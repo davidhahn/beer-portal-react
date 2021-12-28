@@ -21,7 +21,16 @@
 .bio {
   text-align: center;
   color: gray;
-  margin-top: 16px;
+  margin: 16px 0;
+}
+
+.beeer {
+  width: 80%;
+  margin: 0 auto;
+}
+
+.beeer img {
+  width: 100%;
 }
 
 .waveButton {
