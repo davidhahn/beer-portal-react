@@ -9,6 +9,38 @@ const CONTRACT_ADDRESS = '0x39d03F205446397039ea92c4f09a192b776Ce937';
 const App = () => {
   const [currentAccount, setCurrentAccount] = useState('');
   const [isSuccessfulTxn, setIsSuccessfulTxn] = useState('');
+  const [allBeers, setAllBeers] = useState([]);
+
+  const getAllBeers = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (ethereum) {
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const contractAddress = CONTRACT_ADDRESS;
+        const contractABI = abi.abi;
+        const beerPortalContract = new ethers.Contract(contractAddress, contractABI, signer);
+
+        const beers = await beerPortalContract.getAllBeers();
+
+        let beersCleaned = [];
+        beers.forEach(beer => {
+          beersCleaned.push({
+            address: beer.bartender,
+            message: beer.message,
+            timestamp: new Date(beer.timestamp * 1000),
+          });
+        });
+
+        setAllBeers(beersCleaned);
+      } else {
+        console.log('Ethereum object doesn\'t exist!');
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const checkIfWalletIsConnected = async () => {
     try {
@@ -27,6 +59,10 @@ const App = () => {
         const account = accounts[0];
         console.log('Found an authorized account:', account);
         setCurrentAccount(account);
+        
+        await getAllBeers();
+        console.log(allBeers);
+
       } else {
         console.log('No authorized account found');
       }
@@ -68,7 +104,7 @@ const App = () => {
         let count = await beerPortalContract.getTotalBeers();
         console.log("Retrieved total beer count...", count.toNumber());
 
-        const beerTxn = await beerPortalContract.receiveBeer();
+        const beerTxn = await beerPortalContract.receiveBeer('Cheers!');
         console.log("Mining...", beerTxn.hash);
 
         await beerTxn.wait();
@@ -108,14 +144,26 @@ const App = () => {
           </div>
         )}
 
-        <button className="waveButton" onClick={beer}>
+        <button className="beerButton" onClick={beer}>
           🍺 Me
         </button>
         {!currentAccount && (
-          <button className="waveButton" onClick={connectWallet}>
+          <button className="beerButton" onClick={connectWallet}>
             Connect Wallet
           </button>
         )}
+        <div className="beersContainer">
+          <h2>Bar Tab</h2>
+          {allBeers.map((beer, index) => {
+            return (
+              <div key={index} className="beerContainer">
+                <h3>Address: {beer.address}</h3>
+                <p>Message: {beer.message}</p>
+                <p>Time: {beer.timestamp.toString()}</p>
+              </div>
+            )
+          })}
+        </div>
       </div>
     </div>
   );
