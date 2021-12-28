@@ -3,7 +3,8 @@ import { ethers } from 'ethers';
 import './App.css';
 import abi from './utils/BeerPortal.json';
 
-const CONTRACT_ADDRESS = '0x67F9a88BF7e659CCd8982AD2ce8E15215A9e908E';
+// const CONTRACT_ADDRESS = '0x67F9a88BF7e659CCd8982AD2ce8E15215A9e908E';
+const CONTRACT_ADDRESS = '0x39d03F205446397039ea92c4f09a192b776Ce937';
 
 const App = () => {
   const [currentAccount, setCurrentAccount] = useState('');
@@ -64,7 +65,7 @@ const App = () => {
 
         console.log(beerPortalContract);
 
-        let count = await beerPortalContract.getTotalBeer();
+        let count = await beerPortalContract.getTotalBeers();
         console.log("Retrieved total beer count...", count.toNumber());
 
         const beerTxn = await beerPortalContract.receiveBeer();
@@ -75,7 +76,7 @@ const App = () => {
 
         setIsSuccessfulTxn(true);
 
-        count = await beerPortalContract.getTotalBeer();
+        count = await beerPortalContract.getTotalBeers();
         console.log("Retrieved total beer count...", count.toNumber());
 
       } else {
