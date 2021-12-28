@@ -4,12 +4,15 @@ import './App.css';
 import abi from './utils/BeerPortal.json';
 
 // const CONTRACT_ADDRESS = '0x67F9a88BF7e659CCd8982AD2ce8E15215A9e908E';
-const CONTRACT_ADDRESS = '0x39d03F205446397039ea92c4f09a192b776Ce937';
+// const CONTRACT_ADDRESS = '0x39d03F205446397039ea92c4f09a192b776Ce937';
+// const CONTRACT_ADDRESS = '0xB5f3b483f22ee3cb991e3AfD2c4229869b1F449f';
+const CONTRACT_ADDRESS = '0xa61bEfC8AE7a656CD707a7660bBEb15BD1cBa6cb';
 
 const App = () => {
   const [currentAccount, setCurrentAccount] = useState('');
   const [isSuccessfulTxn, setIsSuccessfulTxn] = useState('');
   const [allBeers, setAllBeers] = useState([]);
+  const [beerMessage, setBeerMessage] = useState('');
 
   const getAllBeers = async () => {
     try {
@@ -34,9 +37,8 @@ const App = () => {
           });
 
           return serialized;
-        }, []);
-
-        console.log('serialized beer', serializedBeer);
+        }, [])
+          .sort((a, b) => b.timestamp - a.timestamp);
 
         setAllBeers(serializedBeer);
       } else {
@@ -94,11 +96,15 @@ const App = () => {
     }
   }
 
-  const beer = async () => {
+  const beer = async (event) => {
+    event.preventDefault();
+    
     try {
       const { ethereum } = window;
 
       if (ethereum) {
+        setIsSuccessfulTxn(false);
+
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
         const contractABI = abi.abi;
@@ -109,11 +115,12 @@ const App = () => {
         let count = await beerPortalContract.getTotalBeers();
         console.log("Retrieved total beer count...", count.toNumber());
 
-        const beerTxn = await beerPortalContract.receiveBeer('Cheers!');
+        const beerTxn = await beerPortalContract.receiveBeer(beerMessage);
         console.log("Mining...", beerTxn.hash);
 
         await beerTxn.wait();
         console.log("Mined -- ", beerTxn.hash);
+        console.log("Beer ", beerTxn);
 
         setIsSuccessfulTxn(true);
 
@@ -132,6 +139,10 @@ const App = () => {
     checkIfWalletIsConnected();
   }, []);
 
+  const handleOnChange = (event) => {
+    setBeerMessage(event.target.value);
+  }
+
   return (
     <div className="mainContainer">
 
@@ -148,10 +159,13 @@ const App = () => {
             <img src="https://c.tenor.com/C-LgJxI1hbEAAAAd/iron-chef-secret-ingredient.gif" />
           </div>
         )}
-
-        <button className="beerButton" onClick={beer}>
-          🍺 Me
-        </button>
+        <form onSubmit={beer} className="beerForm">
+          <section className="beerMessageSection">
+            <label htmlFor="beerMessage" className="beerLabel">Message:</label>
+            <input id="beerMessage" type="text" value={beerMessage} onChange={handleOnChange} className="beerMessage" />
+          </section>
+          <input className="beerButton" type="submit" value="🍺 Me" />
+        </form>
         {!currentAccount && (
           <button className="beerButton" onClick={connectWallet}>
             Connect Wallet
@@ -162,9 +176,9 @@ const App = () => {
           {allBeers.map((beer, index) => {
             return (
               <div key={index} className="beerContainer">
-                <h3>Address: {beer.address}</h3>
-                <p>Message: {beer.message}</p>
-                <p>Time: {beer.timestamp.toString()}</p>
+                <h3>{beer.message} 🍻</h3>
+                <p>From: {beer.address}</p>
+                <p>At: {beer.timestamp.toLocaleString()}</p>
               </div>
             )
           })}

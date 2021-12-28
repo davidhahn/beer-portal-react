@@ -1,3 +1,12 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #d5f3f7;
+  color: #1e8696;
+}
+
 .mainContainer {
   display: flex;
   justify-content: center;
@@ -33,16 +42,56 @@
   width: 100%;
 }
 
+.beerForm {
+  width: 80%;
+  max-width: 600px;
+  margin: 16px auto;
+}
+
+.beerMessageSection {
+  display: felx;
+  margin: 32px 0;
+}
+
+.beerLabel {
+  font-size: 22px;
+  width: 30%;
+  flex: 0 1 auto;
+}
+
+.beerMessage {
+  border: 2px solid #33c1d6;
+  border-radius: 4px;
+  font-size: 22px;
+  line-height: 1.5;
+  padding: 8px;
+  width: 70%;
+  flex: 0 1 auto;
+  margin-left: 8px;
+  background-color: transparent;
+  color: #1e8696;
+}
+
 .beerButton {
   cursor: pointer;
-  margin-top: 16px;
+  display: block;
+  margin: 16px auto;
   padding: 8px;
   border: 0;
   border-radius: 5px;
+  width: 100%;
+  font-size: 22px;
+  background-color: #33c1d6;
+  color: #1e8696
 }
 
 .beerContainer {
-  background-color: aquamarine;
+  background-color: #c0ecf2;
   margin: 16px 0;
-  padding: 8px;
+  padding: 16px;
+  border-radius: 4px;
+}
+
+.beerContainer:nth-of-type(2n - 1) {
+  background-color: #a2e1eb;
 }
