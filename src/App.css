@@ -33,12 +33,13 @@ body {
   margin: 16px 0;
 }
 
-.beeer {
+.beeer, .pouring {
   width: 80%;
   margin: 0 auto;
 }
 
-.beeer img {
+.beeer img,
+.pouring img {
   width: 100%;
 }
 

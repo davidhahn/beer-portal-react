@@ -10,9 +10,10 @@ const CONTRACT_ADDRESS = '0xa61bEfC8AE7a656CD707a7660bBEb15BD1cBa6cb';
 
 const App = () => {
   const [currentAccount, setCurrentAccount] = useState('');
-  const [isSuccessfulTxn, setIsSuccessfulTxn] = useState('');
+  const [isSuccessfulTxn, setIsSuccessfulTxn] = useState(false);
   const [allBeers, setAllBeers] = useState([]);
   const [beerMessage, setBeerMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const getAllBeers = async () => {
     try {
@@ -100,6 +101,8 @@ const App = () => {
     event.preventDefault();
     
     try {
+      setIsSubmitting(true);
+
       const { ethereum } = window;
 
       if (ethereum) {
@@ -108,6 +111,7 @@ const App = () => {
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
         const contractABI = abi.abi;
+        console.log(signer);
         const beerPortalContract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, signer);
 
         console.log(beerPortalContract);
@@ -115,24 +119,49 @@ const App = () => {
         let count = await beerPortalContract.getTotalBeers();
         console.log("Retrieved total beer count...", count.toNumber());
 
-        const beerTxn = await beerPortalContract.receiveBeer(beerMessage);
+        const beerTxn = await beerPortalContract.receiveBeer(beerMessage, { gasLimit: 300000 });
         console.log("Mining...", beerTxn.hash);
 
         await beerTxn.wait();
         console.log("Mined -- ", beerTxn.hash);
         console.log("Beer ", beerTxn);
 
-        setIsSuccessfulTxn(true);
-
         count = await beerPortalContract.getTotalBeers();
         console.log("Retrieved total beer count...", count.toNumber());
+
+        handleOnSuccessTxn({ message: beerMessage, address: beerTxn.from, timestamp: (new Date).toLocaleString() });
 
       } else {
         console.log("Ethereum object doesn't exist!");
       }
     } catch (error) {
       console.log(error)
+    } finally {
+      setBeerMessage('');
+      setIsSubmitting(false);
     }
+  }
+
+  const handleOnSuccessTxn = (beerInfo) => {
+    setIsSuccessfulTxn(true);
+    window.scrollTo(0, 0);
+    const newBeerContainer = document.createElement('div');
+    newBeerContainer.classList.add('beerContainer');
+
+    const messageDOM = document.createElement('h3');
+    messageDOM.innerHTML = `${beerInfo.message} 🍻`;
+    newBeerContainer.appendChild(messageDOM);
+
+    const addressDOM = document.createElement('p');
+    addressDOM.innerHTML = `From: ${beerInfo.address}`;
+    newBeerContainer.appendChild(addressDOM);
+
+    const timestampDOM = document.createElement('p');
+    timestampDOM.innerHTML = `From: ${beerInfo.timestamp}`;
+    newBeerContainer.appendChild(timestampDOM);
+
+    const beersContainerDOM = document.querySelector('.beersContainer');
+    beersContainerDOM.insertBefore(newBeerContainer, beersContainerDOM.firstChild);
   }
 
   useEffect(() => {
@@ -141,6 +170,10 @@ const App = () => {
 
   const handleOnChange = (event) => {
     setBeerMessage(event.target.value);
+  }
+
+  const handleOnFocus = (event) => {
+    setIsSuccessfulTxn(false);
   }
 
   return (
@@ -154,6 +187,11 @@ const App = () => {
         <div className="bio">
         Cheers!
         </div>
+        {isSubmitting && (
+          <div class="pouring">
+            <img src="https://i.imgur.com/GQmhdCh.gif" />
+          </div>
+        )}
         {isSuccessfulTxn && (
           <div className="beeer">
             <img src="https://c.tenor.com/C-LgJxI1hbEAAAAd/iron-chef-secret-ingredient.gif" />
@@ -162,17 +200,17 @@ const App = () => {
         <form onSubmit={beer} className="beerForm">
           <section className="beerMessageSection">
             <label htmlFor="beerMessage" className="beerLabel">Message:</label>
-            <input id="beerMessage" type="text" value={beerMessage} onChange={handleOnChange} className="beerMessage" />
+            <input id="beerMessage" type="text" value={beerMessage} onChange={handleOnChange} className="beerMessage" onFocus={handleOnFocus} />
           </section>
-          <input className="beerButton" type="submit" value="🍺 Me" />
+          <input className="beerButton" type="submit" value={isSubmitting ? 'Pouring beer...' : '🍺 Me'} disabled={isSubmitting} />
         </form>
         {!currentAccount && (
           <button className="beerButton" onClick={connectWallet}>
             Connect Wallet
           </button>
         )}
+        <h2>Bar Tab</h2>
         <div className="beersContainer">
-          <h2>Bar Tab</h2>
           {allBeers.map((beer, index) => {
             return (
               <div key={index} className="beerContainer">
