@@ -6,7 +6,9 @@ import abi from './utils/BeerPortal.json';
 // const CONTRACT_ADDRESS = '0x67F9a88BF7e659CCd8982AD2ce8E15215A9e908E';
 // const CONTRACT_ADDRESS = '0x39d03F205446397039ea92c4f09a192b776Ce937';
 // const CONTRACT_ADDRESS = '0xB5f3b483f22ee3cb991e3AfD2c4229869b1F449f';
-const CONTRACT_ADDRESS = '0xa61bEfC8AE7a656CD707a7660bBEb15BD1cBa6cb';
+// const CONTRACT_ADDRESS = '0xa61bEfC8AE7a656CD707a7660bBEb15BD1cBa6cb';
+// const CONTRACT_ADDRESS = '0x3a43042A351230bC66127964A29b038F87437525';
+const CONTRACT_ADDRESS = '0x6234Ef8910e7a3429FC099a5a0b16242da986413';
 
 const App = () => {
   const [currentAccount, setCurrentAccount] = useState('');
@@ -145,27 +147,11 @@ const App = () => {
   const handleOnSuccessTxn = (beerInfo) => {
     setIsSuccessfulTxn(true);
     window.scrollTo(0, 0);
-    const newBeerContainer = document.createElement('div');
-    newBeerContainer.classList.add('beerContainer');
-
-    const messageDOM = document.createElement('h3');
-    messageDOM.innerHTML = `${beerInfo.message} 🍻`;
-    newBeerContainer.appendChild(messageDOM);
-
-    const addressDOM = document.createElement('p');
-    addressDOM.innerHTML = `From: ${beerInfo.address}`;
-    newBeerContainer.appendChild(addressDOM);
-
-    const timestampDOM = document.createElement('p');
-    timestampDOM.innerHTML = `From: ${beerInfo.timestamp}`;
-    newBeerContainer.appendChild(timestampDOM);
-
-    const beersContainerDOM = document.querySelector('.beersContainer');
-    beersContainerDOM.insertBefore(newBeerContainer, beersContainerDOM.firstChild);
   }
 
   useEffect(() => {
     checkIfWalletIsConnected();
+    newBeerListener();
   }, []);
 
   const handleOnChange = (event) => {
@@ -174,6 +160,38 @@ const App = () => {
 
   const handleOnFocus = (event) => {
     setIsSuccessfulTxn(false);
+  }
+
+  const newBeerListener = () => {
+    const onNewBeer = (address, message, timestamp) => {
+      console.log('Incoming beer', address, message, timestamp);
+
+      setAllBeers(prevState => [
+        ...prevState,
+        {
+          address,
+          timestamp: new Date(timestamp * 1000),
+          message
+        }
+      ]);
+    };
+
+    if (window.ethereum) {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const contractABI = abi.abi;
+
+      const beerPortalContract = new ethers.Contract(CONTRACT_ADDRESS, contractABI, signer);
+      beerPortalContract.on('NewBeer', onNewBeer);
+      console.log('new beer listener');
+      console.log(beerPortalContract);
+
+      return () => {
+        if (beerPortalContract) {
+          beerPortalContract.off('NewBeer', onNewBeer);
+        }
+      };
+    }
   }
 
   return (
@@ -188,7 +206,7 @@ const App = () => {
         Cheers!
         </div>
         {isSubmitting && (
-          <div class="pouring">
+          <div className="pouring">
             <img src="https://i.imgur.com/GQmhdCh.gif" />
           </div>
         )}
